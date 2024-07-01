@@ -3,30 +3,72 @@
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-model ParkingLot {
-  id    Int     @id @default(autoincrement())
-  name  String
-  coordX Float
-  coordY Float
+model ParkingPlace {
+  id           String        @id @default(dbgenerated("gen_random_uuid()"))
+  name         String
+  coordX       Float
+  coordY       Float
   parkingspots ParkingSpot[]
+
+  @@unique(name: "coords", fields: [coordX, coordY])
 }
 
 model ParkingSpot {
-  id        Int     @id @default(autoincrement())
-  number    Int
-  floor Int
-  parkingLocation    ParkingLot    @relation(fields: [ParkingLotId], references: [id])
-  ParkingLotId  Int
-  PendingOrders Orders[]
+  id              String       @id @default(dbgenerated("gen_random_uuid()"))
+  number          Int
+  floor           Int
+  pricePerHour    Decimal
+  parkingLocation ParkingPlace @relation(fields: [parkingPlaceId], references: [id], onDelete: Cascade)
+  parkingPlaceId  String
+  pendingOrders   Orders[]
+
+  @@unique(name: "duplication_prevention", fields: [number, floor, parkingPlaceId])
 }
 
+// model Orders {
+//   id              String      @id @default(dbgenerated("gen_random_uuid()"))
+//   takenFrom       DateTime
+//   takenUntil      DateTime
+//   pricePerHour    Decimal
+//   durationInHours Int
+//   finalPrice      Decimal
+//   parkingLocation ParkingSpot @relation(fields: [parkingSpotId], references: [id])
+//   parkingSpotId   String
+//   orderOwner      User        @relation(fields: [ownerId], references: [id])
+//   ownerId         String
+//   parkedCar       Cars        @relation(fields: [parkedCarId], references: [id])
+//   parkedCarId     String
+// }
+
 model Orders {
-  id        Int     @id @default(autoincrement())
-  takenFrom DateTime
-  takenUntil DateTime
-  parkingLocation    ParkingSpot    @relation(fields: [ParkingSpotId], references: [id])
-  ParkingSpotId  Int
+  id              String      @id @default(dbgenerated("gen_random_uuid()"))
+  takenFrom       DateTime
+  takenUntil      DateTime
+  pricePerHour    Decimal
+  durationInHours Int
+  finalPrice      Decimal
+  parkingLocation ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
+  parkingSpotId   String
+  parkedCarSign     String
 }
+
+// model User {
+//   id            String   @id @default(dbgenerated("gen_random_uuid()"))
+//   firstName     String?
+//   lastName      String?
+//   passwordHash  String
+//   email         String @unique
+//   pendingOrders Orders[]
+//   cars          Cars[]
+// }
+
+// model Cars {
+//   id       String @id @default(dbgenerated("gen_random_uuid()"))
+//   sign     String
+//   carOwner User   @relation(fields: [ownerId], references: [id])
+//   ownerId  String
+//   pendingOrders Orders[]
+// }
 
 generator client {
   provider = "prisma-client-js"
