@@ -1,8 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import ParkingPlaceService from "../services/parkingPlaceService";
 import { Prisma } from "@prisma/client";
+import { ErrorCodes } from "../errorHandler/errorHandler";
+import { IParkingPlace } from "../models/ParkingPlaceModel";
 
-export const post = async (req: Request, res: Response) => {
+export const post = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { ...ParkingPlaceData } = req.body;
 
@@ -10,72 +12,101 @@ export const post = async (req: Request, res: Response) => {
             ...ParkingPlaceData
         });
 
-        res.status(200).json(
-            createdParkingPlace,
-        );
+        res.status(200).json({
+            status: "succesfully created",
+            result: createdParkingPlace,
+        });
         
-    } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-            // The .code property can be accessed in a type-safe manner
-            if (e.code === 'P2002') {
-                res.status(409).json({
-                    message: "A parking place with such coordinates already exists"
-                })
-            }
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === ErrorCodes.CONFLICT){
+            res.status(409).json({
+                message: "A parking place with such coordinates already exists"
+            })
         }
         else {
-            console.log(e)
-            res.status(500).json({
-                message: "Internal error",
-            });
+            next(error)
         }
-        
     }
 }
 
 
-export const getAll = async (req: Request, res: Response) => {
+export const getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const result: object[] | null = await ParkingPlaceService.findAllParkingPlaces();
+        const {offset, ammount, ...params } = req.query;
+        const skip = parseInt(req.query.offset as string) || 0
+        const take = parseInt(req.query.ammount as string) || 10
+
+        var filter:Partial<IParkingPlace> = {}
+        if (params.coordX){
+            filter.coordX = parseFloat(params.coordX as string)
+        }
+        if (params.coordY){
+            filter.coordY = parseFloat(params.coordY as string)
+        }
+        console.log(skip, take)
+        const result: object[] | null = await ParkingPlaceService.findAllParkingPlaces(filter, skip, take);
 
         res.status(200).json(
             result
         );
+        // if (typeof skip === "number" && typeof take === "number") {
+            
+        // }
+        // else {
+        //     res.status(400).json("skip and take have to be whole numbers")
+        // }
+        
     } catch (error) {
-        res.status(500).json({
-            message: "Internal error",
-        });
+        next(error)
     }
 }
 
-export const getById = async (req: Request, res: Response) => {
+export const getAllByName = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const name = req.query.name as string;
+        const skip = parseInt(req.query.offset as string) || 0
+        const take = parseInt(req.query.ammount as string) || 10
+
+        const result: object[] | null = await ParkingPlaceService.findAllParkingPlacesByName(name, skip, take);
+
+        res.status(200).json(
+            result
+        );
+
+        // if (typeof skip === "number" && typeof take === "number") {
+            
+        // }
+        // else {
+        //     res.status(400).json("skip and take have to be whole numbers")
+        // }
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
 
         const result: object | null = await ParkingPlaceService.findParkingPlaceById(id);
 
-        res.status(200).json(
-            result
-        );
-    } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-            // The .code property can be accessed in a type-safe manner
-            if (e.code === 'P2025') {
-                res.status(404).json({
-                    message: "A parking place with such ID doesn't exist"
-                })
-            }
+        if(!result){
+            res.status(404).json({
+                message: "A parking place with such ID doesn't exist"
+            })
         }
         else {
-            console.log(e)
-            res.status(500).json({
-                message: "Internal error",
-            });
+            res.status(200).json(
+                result
+            );
         }
+       
+    } catch (error) {
+        next(error)
     }
 }
 
-export const patch = async (req: Request, res: Response) => {
+export const patch = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
         const {...newData} = req.body;
@@ -84,55 +115,44 @@ export const patch = async (req: Request, res: Response) => {
 
         res.status(200).json({
             status: "succesfully updated",
-            updatedParkingPlace: result
+            result: result
         });
-    } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             // The .code property can be accessed in a type-safe manner
-            if (e.code === 'P2002') {
+            if (error.code === ErrorCodes.CONFLICT) {
                 res.status(409).json({
                     message: "A parking place with such coordinates already exists"
                 })
             }
-            if (e.code === 'P2025') {
+            if (error.code === ErrorCodes.NOT_FOUND) {
                 res.status(404).json({
                     message: "A parking place with such ID doesn't exist"
                 })
             }
         }
         else {
-            console.log(e)
-            res.status(500).json({
-                message: "Internal error",
-            });
+            next(error)
         }
     }
 }
 
-export const remove = async (req: Request, res: Response) => {
+export const remove = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
 
         const result: object | null = await ParkingPlaceService.removeParkingPlace(id);
 
-        res.status(204).json({
-            status: "succesfully deleted",
-            deletedParkingPlace: result
-        });
-    } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-            // The .code property can be accessed in a type-safe manner
-            if (e.code === 'P2025') {
-                res.status(404).json({
-                    message: "A parking place with such ID doesn't exist"
-                })
-            }
+        res.status(204);
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && ErrorCodes.NOT_FOUND) {
+            res.status(404).json({
+                message: "A parking place with such ID doesn't exist"
+            })
         }
         else {
-            console.log(e)
-            res.status(500).json({
-                message: "Internal error",
-            });
+            next(error)
+
         }
     }
 }

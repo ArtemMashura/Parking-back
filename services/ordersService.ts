@@ -9,7 +9,7 @@ class OrdersService {
         return await prisma.orders.findMany();
     }
     async findOrderById(id: string): Promise<IOrders | null> {
-        return await prisma.orders.findFirst({where: {
+        return await prisma.orders.findUnique({where: {
             id: id,
         }});
     }

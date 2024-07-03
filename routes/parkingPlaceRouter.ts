@@ -5,6 +5,7 @@ import * as ParkingPlaceController from '../controllers/parkingPlaceController';
 const router: Router = express.Router();
 
 router.get('/parkingplace', ParkingPlaceController.getAll);
+router.get('/parkingplace/getbyname', ParkingPlaceController.getAllByName);
 router.get('/parkingplace/:id', ParkingPlaceController.getById);
 router.post('/parkingplace', ParkingPlaceController.post);
 router.patch('/parkingplace/:id', ParkingPlaceController.patch);

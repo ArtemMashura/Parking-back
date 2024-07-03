@@ -5,15 +5,32 @@ class ParkingPlaceService {
     async createParkingPlace(ParkingPlaceData: IParkingPlace): Promise<object> {        
         return await prisma.parkingPlace.create({data : ParkingPlaceData});
     }
-    async findAllParkingPlaces(): Promise<object[] | null> {
+    async findAllParkingPlaces(filter: Partial<IParkingPlace>, skip: number, take: number): Promise<object[] | null> {
         return await prisma.parkingPlace.findMany({
             include: {
                 parkingspots: true
-            }
+            },
+            where: filter,
+            skip,
+            take
+        });
+    }
+    async findAllParkingPlacesByName(filter: string, skip: number, take: number): Promise<object[] | null> {
+        return await prisma.parkingPlace.findMany({
+            include: {
+                parkingspots: true
+            },
+            where: {
+                name: {
+                    startsWith: filter
+                }
+            },
+            skip,
+            take
         });
     }
     async findParkingPlaceById(id: string): Promise<object | null> {
-        return await prisma.parkingPlace.findFirst({
+        return await prisma.parkingPlace.findUnique({
             where: {
                 id: id,
             },

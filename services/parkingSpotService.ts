@@ -13,7 +13,7 @@ class ParkingSpotService {
         });
     }
     async findParkingSpotById(id: string): Promise<IParkingSpot | null> {
-        return await prisma.parkingSpot.findFirst({where: {
+        return await prisma.parkingSpot.findUnique({where: {
             id: id,
         }});
     }
