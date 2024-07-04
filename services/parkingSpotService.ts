@@ -5,7 +5,7 @@ class ParkingSpotService {
     async createParkingSpot(ParkingSpotData: IParkingSpot): Promise<IParkingSpot> {        
         return await prisma.parkingSpot.create({data : ParkingSpotData});
     }
-    async findAllParkingSpots(): Promise<IParkingSpot[] | null> {
+    async findAllParkingSpots(filter: Partial<IParkingSpot>, skip: number, take: number): Promise<IParkingSpot[] | null> {
         return await prisma.parkingSpot.findMany({
             include: {
                 pendingOrders: true

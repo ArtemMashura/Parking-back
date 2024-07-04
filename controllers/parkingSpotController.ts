@@ -1,7 +1,11 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import ParkingSpotService from "../services/parkingSpotService";
+import { Prisma } from "@prisma/client";
+import { ErrorCodes } from "../errorHandler/errorHandler";
+import { IParkingSpot } from "../models/ParkingSpotModel";
+import { Decimal } from "@prisma/client/runtime/library";
 
-export const post = async (req: Request, res: Response) => {
+export const post = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { ...ParkingSpotData } = req.body;
 
@@ -9,21 +13,42 @@ export const post = async (req: Request, res: Response) => {
             ...ParkingSpotData
         });
 
-        res.status(200).json(
-            createdParkingSpot,
-        );
+        res.status(200).json({
+            status: "succesfully created",
+            result: createdParkingSpot,
+        });
         
     } catch (error) {
-        res.status(500).json({
-            message: error,
-        });
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === ErrorCodes.CONFLICT){
+            res.status(409).json({
+                message: "A parking spot with with such number and floor already exists in that parking place"
+            })
+        }
+        else {
+            next(error)
+        }
     }
 }
 
 
 export const getAll = async (req: Request, res: Response) => {
     try {
-        const ParkingSpots: object[] | null = await ParkingSpotService.findAllParkingSpots();
+        const {offset, ammount, ...params } = req.query;
+        const skip = parseInt(req.query.offset as string) || 0
+        const take = parseInt(req.query.ammount as string) || 10
+
+        var filter:Partial<IParkingSpot> = {}
+        if (params.number){
+            filter.number = parseInt(params.coordX as string)
+        }
+        if (params.floor){
+            filter.floor = parseInt(params.coordY as string)
+        }
+        if (params.pricePerHour){
+            filter.pricePerHour = new Decimal(params.coordY as string)
+        }
+        console.log(skip, take)
+        const ParkingSpots: object[] | null = await ParkingSpotService.findAllParkingSpots(filter, skip, take);
 
         res.status(200).json(
             ParkingSpots
