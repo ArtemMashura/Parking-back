@@ -21,7 +21,6 @@ export const post = async (req: Request, res: Response) => {
         );
         
     } catch (error: any) {
-        console.log(error.message)
         res.status(500).json({
             message: error.message,
         });

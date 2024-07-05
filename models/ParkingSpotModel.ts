@@ -8,3 +8,15 @@ export interface IParkingSpot {
 
 }
 
+// export class PriceChecker {
+//     gte: Prisma.Decimal
+
+//     constructor(condition:string, price:Prisma.Decimal){
+//         if (condition === "gte"){
+//             this.gte = price
+//         }
+//         else {
+//             this.lte: price
+//         }
+//     }
+// }

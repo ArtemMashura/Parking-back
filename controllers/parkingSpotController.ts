@@ -60,6 +60,39 @@ export const getAll = async (req: Request, res: Response) => {
     }
 }
 
+export const getByPrice = async (req: Request, res: Response) => {
+    try {
+        const { condition, price } = req.query;
+        var filter:object
+        if (condition === "gte"){
+            filter = {
+                gte: price
+            }   
+        }
+        else if (condition === "lte"){
+            filter = {
+                lte: price
+            }   
+        }
+        else {
+            return res.status(400).json({
+                message: "Error while finding the condition",
+            })
+            
+        }
+        
+        const ParkingSpots: object[] | null = await ParkingSpotService.findParkingSpotsByPrice(filter);
+
+        res.status(200).json(
+            ParkingSpots
+        );
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal error",
+        });
+    }
+}
+
 export const getById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;

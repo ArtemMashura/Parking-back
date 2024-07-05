@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import ParkingPlaceService from "../services/parkingPlaceService";
-import { Prisma } from "@prisma/client";
+import { ParkingPlace, Prisma } from "@prisma/client";
 import { ErrorCodes } from "../errorHandler/errorHandler";
-import { IParkingPlace } from "../models/ParkingPlaceModel";
+import { IParkingPlace, IParkingPlaceFromReq, ParkingPlaceClass } from "../models/ParkingPlaceModel";
 
 export const post = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -20,7 +20,8 @@ export const post = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === ErrorCodes.CONFLICT){
             res.status(409).json({
-                message: "A parking place with such coordinates already exists"
+                message: "A parking place with such coordinates already exists",
+                details: error.message
             })
         }
         else {
@@ -36,14 +37,9 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
         const skip = parseInt(req.query.offset as string) || 0
         const take = parseInt(req.query.ammount as string) || 10
 
-        var filter:Partial<IParkingPlace> = {}
-        if (params.coordX){
-            filter.coordX = parseFloat(params.coordX as string)
-        }
-        if (params.coordY){
-            filter.coordY = parseFloat(params.coordY as string)
-        }
-        console.log(skip, take)
+        const filter:ParkingPlaceClass = new ParkingPlaceClass(params as any)
+        
+        console.log(filter, skip, take)
         const result: object[] | null = await ParkingPlaceService.findAllParkingPlaces(filter, skip, take);
 
         res.status(200).json(
@@ -57,7 +53,15 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
         // }
         
     } catch (error) {
-        next(error)
+        if (error instanceof Prisma.PrismaClientValidationError){
+            res.status(400).json({
+                message: "Bad Request",
+                details: error.message
+            })
+        }
+        else {
+            next(error)
+        }
     }
 }
 
@@ -122,12 +126,14 @@ export const patch = async (req: Request, res: Response, next: NextFunction) => 
             // The .code property can be accessed in a type-safe manner
             if (error.code === ErrorCodes.CONFLICT) {
                 res.status(409).json({
-                    message: "A parking place with such coordinates already exists"
+                    message: "A parking place with such coordinates already exists",
+                    details: error.message
                 })
             }
             if (error.code === ErrorCodes.NOT_FOUND) {
                 res.status(404).json({
-                    message: "A parking place with such ID doesn't exist"
+                    message: "A parking place with such ID doesn't exist",
+                    
                 })
             }
         }

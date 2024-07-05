@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../db/prisma';
 import { IParkingSpot } from "../models/ParkingSpotModel";
 
@@ -7,6 +8,18 @@ class ParkingSpotService {
     }
     async findAllParkingSpots(filter: Partial<IParkingSpot>, skip: number, take: number): Promise<IParkingSpot[] | null> {
         return await prisma.parkingSpot.findMany({
+            include: {
+                pendingOrders: true
+            }
+        });
+    }
+    async findParkingSpotsByPrice(filter: object): Promise<IParkingSpot[] | null> {
+        
+            
+        return await prisma.parkingSpot.findMany({
+            where: {
+                pricePerHour: filter
+            },
             include: {
                 pendingOrders: true
             }
