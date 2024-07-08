@@ -1,11 +1,11 @@
 import prisma from '../db/prisma';
-import { IParkingPlace, ParkingPlaceClass } from "../models/ParkingPlaceModel";
+import { IParkingPlace, ParkingPlaceFromReqClass } from "../models/ParkingPlaceModel";
 
 class ParkingPlaceService {
     async createParkingPlace(ParkingPlaceData: IParkingPlace): Promise<object> {        
         return await prisma.parkingPlace.create({data : ParkingPlaceData});
     }
-    async findAllParkingPlaces(filter: ParkingPlaceClass, skip: number, take: number): Promise<object[] | null> {
+    async findAllParkingPlaces(filter: ParkingPlaceFromReqClass, skip: number, take: number): Promise<object[] | null> {
         return await prisma.parkingPlace.findMany({
             include: {
                 parkingspots: true

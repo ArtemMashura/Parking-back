@@ -11,10 +11,10 @@ export interface IParkingPlaceFromReq {
     coordY: string
 }
 
-export class ParkingPlaceClass {
-    name?:  string
-    coordX?: number
-    coordY?: number
+export class ParkingPlaceFromReqClass {
+    name!:  string
+    coordX!: number
+    coordY!: number
     
     constructor(data:IParkingPlaceFromReq){
         if (data.name)

@@ -49,7 +49,9 @@ model Orders {
   finalPrice      Decimal
   parkingLocation ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
   parkingSpotId   String
-  parkedCarSign     String
+  parkedCarSign   String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 // model User {

@@ -1,12 +1,16 @@
 import prisma from '../db/prisma';
-import { IOrders } from "../models/OrdersModel";
+import { IOrders, OrdersFromReqClass } from "../models/OrdersModel";
 
 class OrdersService {
     async createOrder(OrdersData: IOrders): Promise<IOrders> {  
         return await prisma.orders.create({data : OrdersData});
     }
-    async findAllOrders(): Promise<IOrders[] | null> {
-        return await prisma.orders.findMany();
+    async findAllOrders(filter: OrdersFromReqClass, skip: number, take: number): Promise<IOrders[] | null> {
+        return await prisma.orders.findMany({
+            where: filter,
+            skip,
+            take
+        });
     }
     async findOrderById(id: string): Promise<IOrders | null> {
         return await prisma.orders.findUnique({where: {
