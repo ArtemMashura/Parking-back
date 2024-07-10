@@ -1,20 +1,19 @@
 import { NextFunction, Request, Response } from "express";
-import ParkingPlaceService from "../services/parkingPlaceService";
-import { ParkingPlace, Prisma } from "@prisma/client";
+import ZoneService from "../services/zoneService";
+import { Zone, Prisma } from "@prisma/client";
 import { ErrorCodes } from "../errorHandler/errorHandler";
-import { IParkingPlace, IParkingPlaceFromReq, ParkingPlaceFromReqClass } from "../models/ParkingPlaceModel";
 
 export const post = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { ...ParkingPlaceData } = req.body;
+        const { ...ZoneData } = req.body;
 
-        const createdParkingPlace: object = await ParkingPlaceService.createParkingPlace({
-            ...ParkingPlaceData
+        const createdZone: object = await ZoneService.createZone({
+            ...ZoneData
         });
 
         res.status(200).json({
             status: "succesfully created",
-            result: createdParkingPlace,
+            result: createdZone,
         });
         
     } catch (error) {
@@ -37,9 +36,9 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
         const skip = parseInt(req.query.offset as string) || 0
         const take = parseInt(req.query.ammount as string) || 10
 
-        const filter:ParkingPlaceFromReqClass = new ParkingPlaceFromReqClass(params as any)
+        // const filter:ZoneFromReqClass = new ZoneFromReqClass(params as any)
         
-        const result: object[] | null = await ParkingPlaceService.findAllParkingPlaces(filter, skip, take);
+        const result: object[] | null = await ZoneService.findAllZones(skip, take);
 
         res.status(200).json(
             result
@@ -64,34 +63,12 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
     }
 }
 
-export const getAllByName = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const name = req.query.name as string;
-        const skip = parseInt(req.query.offset as string) || 0
-        const take = parseInt(req.query.ammount as string) || 10
-
-        const result: object[] | null = await ParkingPlaceService.findAllParkingPlacesByName(name, skip, take);
-
-        res.status(200).json(
-            result
-        );
-
-        // if (typeof skip === "number" && typeof take === "number") {
-            
-        // }
-        // else {
-        //     res.status(400).json("skip and take have to be whole numbers")
-        // }
-    } catch (error) {
-        next(error)
-    }
-}
 
 export const getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
 
-        const result: object | null = await ParkingPlaceService.findParkingPlaceById(id);
+        const result: object | null = await ZoneService.findZoneById(id);
 
         if(!result){
             return res.status(404).json({
@@ -112,7 +89,7 @@ export const patch = async (req: Request, res: Response, next: NextFunction) => 
         const { id } = req.params;
         const {...newData} = req.body;
 
-        const result: object | null = await ParkingPlaceService.updateParkingPlace(id, newData);
+        const result: object | null = await ZoneService.updateZone(id, newData);
 
         res.status(200).json({
             status: "succesfully updated",
@@ -144,7 +121,7 @@ export const remove = async (req: Request, res: Response, next: NextFunction) =>
     try {
         const { id } = req.params;
 
-        const result: object | null = await ParkingPlaceService.removeParkingPlace(id);
+        const result: object | null = await ZoneService.removeZone(id);
 
         res.sendStatus(204);
     } catch (error) {

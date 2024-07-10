@@ -10,6 +10,10 @@ import { Prisma } from "@prisma/client"
 //     ownerId: string
 //     parkedCarId: string
 // }
+export interface IOrdersCheckConstraints {
+    status: Number,
+    conflictingOrder: Partial<IOrders> | null
+}
 
 export interface IOrders {
     takenFrom: Date

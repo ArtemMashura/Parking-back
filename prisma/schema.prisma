@@ -17,7 +17,7 @@ model ParkingSpot {
   id              String       @id @default(dbgenerated("gen_random_uuid()"))
   number          Int
   floor           Int
-  pricePerHour    Decimal
+  pricePerHour    Decimal @db.Decimal(5, 2)
   parkingLocation ParkingPlace @relation(fields: [parkingPlaceId], references: [id], onDelete: Cascade)
   parkingPlaceId  String
   pendingOrders   Orders[]
@@ -44,9 +44,9 @@ model Orders {
   id              String      @id @default(dbgenerated("gen_random_uuid()"))
   takenFrom       DateTime
   takenUntil      DateTime
-  pricePerHour    Decimal
+  pricePerHour    Decimal @db.Decimal(5, 2)
   durationInHours Int
-  finalPrice      Decimal
+  finalPrice      Decimal @db.Decimal(8, 2)
   parkingLocation ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
   parkingSpotId   String
   parkedCarSign   String
@@ -71,6 +71,22 @@ model Orders {
 //   ownerId  String
 //   pendingOrders Orders[]
 // }
+
+model Zone {
+  id              String      @id @default(dbgenerated("gen_random_uuid()"))
+  color String
+  path MapPoint[]
+}
+
+model MapPoint {
+  id              String      @id @default(dbgenerated("gen_random_uuid()"))
+  lat Decimal @db.Decimal(8, 5)
+  lng Decimal @db.Decimal(8, 5)
+  zone   Zone @relation(fields: [zoneId], references: [id])
+  zoneId String
+
+  @@unique([zoneId, lat, lng])
+}
 
 generator client {
   provider = "prisma-client-js"

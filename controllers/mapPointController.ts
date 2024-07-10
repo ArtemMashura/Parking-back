@@ -1,20 +1,54 @@
 import { NextFunction, Request, Response } from "express";
-import ParkingPlaceService from "../services/parkingPlaceService";
-import { ParkingPlace, Prisma } from "@prisma/client";
+import MapPointService from "../services/mapPointService";
+import { MapPoint, Prisma } from "@prisma/client";
 import { ErrorCodes } from "../errorHandler/errorHandler";
-import { IParkingPlace, IParkingPlaceFromReq, ParkingPlaceFromReqClass } from "../models/ParkingPlaceModel";
+import { IMapPoint } from "../models/MapPointModel";
 
 export const post = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { ...ParkingPlaceData } = req.body;
+        console.log(1)
+        const { ...MapPointData } = req.body;
 
-        const createdParkingPlace: object = await ParkingPlaceService.createParkingPlace({
-            ...ParkingPlaceData
+        const createdMapPoint: object = await MapPointService.createMapPoint({
+            ...MapPointData
         });
 
         res.status(200).json({
             status: "succesfully created",
-            result: createdParkingPlace,
+            result: createdMapPoint,
+        });
+        
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === ErrorCodes.CONFLICT){
+            res.status(409).json({
+                message: "A parking place with such coordinates already exists",
+                details: error.message
+            })
+        }
+        else {
+            next(error)
+        }
+    }
+}
+
+export const postMany = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {zoneId, path } = req.body;
+
+        var MapPoints:IMapPoint[] = []
+        path.forEach((mapPoint: IMapPoint) => {
+            MapPoints.push({
+                "lat": mapPoint.lat,
+                "lng": mapPoint.lng,
+                "zoneId": zoneId
+            })
+        });
+        console.log(MapPoints)
+        const createdMapPoint: object = await MapPointService.createManyMapPoints(MapPoints);
+
+        res.status(200).json({
+            status: "succesfully created",
+            result: createdMapPoint,
         });
         
     } catch (error) {
@@ -37,9 +71,9 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
         const skip = parseInt(req.query.offset as string) || 0
         const take = parseInt(req.query.ammount as string) || 10
 
-        const filter:ParkingPlaceFromReqClass = new ParkingPlaceFromReqClass(params as any)
+        // const filter:MapPointFromReqClass = new MapPointFromReqClass(params as any)
         
-        const result: object[] | null = await ParkingPlaceService.findAllParkingPlaces(filter, skip, take);
+        const result: object[] | null = await MapPointService.findAllMapPoints(skip, take);
 
         res.status(200).json(
             result
@@ -64,34 +98,12 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
     }
 }
 
-export const getAllByName = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const name = req.query.name as string;
-        const skip = parseInt(req.query.offset as string) || 0
-        const take = parseInt(req.query.ammount as string) || 10
-
-        const result: object[] | null = await ParkingPlaceService.findAllParkingPlacesByName(name, skip, take);
-
-        res.status(200).json(
-            result
-        );
-
-        // if (typeof skip === "number" && typeof take === "number") {
-            
-        // }
-        // else {
-        //     res.status(400).json("skip and take have to be whole numbers")
-        // }
-    } catch (error) {
-        next(error)
-    }
-}
 
 export const getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
 
-        const result: object | null = await ParkingPlaceService.findParkingPlaceById(id);
+        const result: object | null = await MapPointService.findMapPointById(id);
 
         if(!result){
             return res.status(404).json({
@@ -112,7 +124,7 @@ export const patch = async (req: Request, res: Response, next: NextFunction) => 
         const { id } = req.params;
         const {...newData} = req.body;
 
-        const result: object | null = await ParkingPlaceService.updateParkingPlace(id, newData);
+        const result: object | null = await MapPointService.updateMapPoint(id, newData);
 
         res.status(200).json({
             status: "succesfully updated",
@@ -144,7 +156,7 @@ export const remove = async (req: Request, res: Response, next: NextFunction) =>
     try {
         const { id } = req.params;
 
-        const result: object | null = await ParkingPlaceService.removeParkingPlace(id);
+        const result: object | null = await MapPointService.removeMapPoint(id);
 
         res.sendStatus(204);
     } catch (error) {

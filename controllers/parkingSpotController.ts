@@ -51,7 +51,6 @@ export const getAll = async (req: Request, res: Response, next:NextFunction) => 
         //     filter.pricePerHour = new Decimal(params.coordY as string)
         // }
         // console.log(skip, take)
-        console.log(filter)
         const ParkingSpots: object[] | null = await ParkingSpotService.findAllParkingSpots(filter, skip, take);
 
         res.status(200).json(
@@ -70,7 +69,7 @@ export const getAll = async (req: Request, res: Response, next:NextFunction) => 
     }
 }
 
-export const getByPrice = async (req: Request, res: Response) => {
+export const getByPrice = async (req: Request, res: Response, next:NextFunction) => {
     try {
         const { condition, price } = req.query;
         const skip = parseInt(req.query.offset as string) || 0
@@ -101,9 +100,7 @@ export const getByPrice = async (req: Request, res: Response) => {
             ParkingSpots
         );
     } catch (error) {
-        res.status(500).json({
-            message: "Internal error",
-        });
+        next(error)
     }
 }
 
@@ -165,7 +162,7 @@ export const remove = async (req: Request, res: Response, next:NextFunction) => 
 
         const result: object | null = await ParkingSpotService.removeParkingSpot(id);
 
-        res.status(204)
+        res.sendStatus(204)
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && ErrorCodes.NOT_FOUND) {
             res.status(404).json({
